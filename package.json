@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "data:import": "node src/seed.js --import",
+    "data:delete": "node src/seed.js --delete"
   },
   "keywords": [],
   "author": "",
