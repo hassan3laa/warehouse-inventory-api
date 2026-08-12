@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { protect, restrictTo } = require("../Controllers/authController");
 
 const {
   getSuppliers,
@@ -9,12 +10,15 @@ const {
   deleteSupplier,
 } = require("../controllers/supplierController");
 
-router.route("/").get(getSuppliers).post(createSupplier);
+router
+  .route("/")
+  .get(protect, getSuppliers)
+  .post(protect, restrictTo("admin"), createSupplier);
 
 router
   .route("/:id")
-  .get(getSupplier)
-  .patch(updateSupplier)
-  .delete(deleteSupplier);
+  .get(protect, getSupplier)
+  .patch(protect, restrictTo("admin"), updateSupplier)
+  .delete(protect, restrictTo("admin"), deleteSupplier);
 
 module.exports = router;

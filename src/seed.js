@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 
+const User = require("./models/userModel");
 const Category = require("./models/categoryModel");
 const Supplier = require("./models/supplierModel");
 const Product = require("./models/productModel");
@@ -24,6 +25,15 @@ const importData = async () => {
     await Category.deleteMany();
     await Supplier.deleteMany();
     await Product.deleteMany();
+    await User.deleteMany();
+
+    await User.create({
+      name: "System Admin",
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD,
+      passwordConfirm: process.env.ADMIN_PASSWORD,
+      role: "admin",
+    });
 
     const createdCategories = await Category.create(categories);
     const createdSuppliers = await Supplier.create(suppliers);

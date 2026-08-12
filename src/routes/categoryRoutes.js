@@ -1,16 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const categoryController = require("../Controllers/categoryController");
+const { protect, restrictTo } = require("../Controllers/authController");
 
 router
   .route("/")
-  .get(categoryController.getCategories)
-  .post(categoryController.createCategory);
+  .get(protect, categoryController.getCategories)
+  .post(protect, restrictTo("admin"), categoryController.createCategory);
 
 router
   .route("/:id")
-  .get(categoryController.getCategory)
-  .patch(categoryController.updateCategory)
-  .delete(categoryController.deleteCategory);
+  .get(protect, categoryController.getCategory)
+  .patch(protect, restrictTo("admin"), categoryController.updateCategory)
+  .delete(protect, restrictTo("admin"), categoryController.deleteCategory);
 
 module.exports = router;
