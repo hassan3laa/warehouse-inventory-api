@@ -77,6 +77,11 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError("The user belonging to this token no longer exist.", 401),
     );
   }
+  if (currentUser.changedPasswordAfter(decode.iat)) {
+    return next(
+      new AppError("User recently changed password! Please log in again.", 401),
+    );
+  }
 
   req.user = currentUser;
   next();
@@ -92,3 +97,36 @@ exports.restrictTo = (...roles) => {
     next();
   };
 };
+
+exports.changePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword, newPasswordConfirm } = req.body;
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return next(
+      new AppError(
+        "Please provide current password, new password and password confirmation",
+        400,
+      ),
+    );
+  }
+  const user = await User.findById(req.user._id).select("+password");
+  const correct = await user.correctPassword(currentPassword, user.password);
+
+  if (!correct) {
+    return next(new AppError("Your current password is incorrect", 401));
+  }
+  if (newPassword !== newPasswordConfirm) {
+    return next(
+      new AppError("New password and password confirmation do not match", 400),
+    );
+  }
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirm;
+  await user.save();
+
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: "success",
+    token,
+    message: "Password changed successfully",
+  });
+});

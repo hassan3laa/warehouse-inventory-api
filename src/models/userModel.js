@@ -29,6 +29,10 @@ const userSchema = mongoose.Schema(
       required: [true, "password confirmation is required"],
       select: false,
     },
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
     role: {
       type: String,
       enum: ["admin", "employee"],
@@ -45,6 +49,10 @@ userSchema.pre("save", async function () {
 
   this.password = await bycrypt.hash(this.password, 12);
   this.passwordConfirm = undefined;
+
+  if (!this.isNew) {
+    this.passwordChangedAt = Date.now() - 1000;
+  }
 });
 
 userSchema.methods.correctPassword = async function (
@@ -52,6 +60,14 @@ userSchema.methods.correctPassword = async function (
   userPassword,
 ) {
   return await bycrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt / 1000, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 module.exports = mongoose.model("User", userSchema);
